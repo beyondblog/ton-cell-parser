@@ -84,10 +84,10 @@ export function CellParser({ }: CellParserProps) {
                     result = slice.loadInt(value!);
                     break;
                 case 'loadBigUint':
-                    result = slice.loadBigUint(value!);
+                    result = slice.loadUintBig(value!);
                     break;
                 case 'loadBigInt':
-                    result = slice.loadBigInt(value!);
+                    result = slice.loadIntBig(value!);
                     break;
                 case 'loadCoins':
                     result = slice.loadCoins();
@@ -96,10 +96,10 @@ export function CellParser({ }: CellParserProps) {
                     result = slice.loadAddress()?.toString() || '';
                     break;
                 case 'loadBytes':
-                    result = slice.loadBytes(value!);
+                    result = slice.loadBuffer(value!);
                     break;
                 case 'loadString':
-                    result = slice.loadString(value!);
+                    result = slice.loadStringTail();
                     break;
                 default:
                     result = 'Unsupported action';
@@ -114,7 +114,9 @@ export function CellParser({ }: CellParserProps) {
     useEffect(() => {
         const highlightedElements = document.querySelectorAll('[data-highlighted]');
         highlightedElements.forEach((element) => {
-            delete element.dataset.highlighted;
+            if (element instanceof HTMLElement) {
+                delete element.dataset.highlighted;
+            }
         });
 
         hljs.highlightAll();
