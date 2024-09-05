@@ -1,0 +1,31 @@
+{
+    "name": "ton-cell-parser",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@ton/core": "^0.57.0",
+        "@types/node": "^18.15.11",
+        "@types/react": "^18.0.37",
+        "@types/react-dom": "^18.0.11",
+        "class-variance-authority": "^0.4.0",
+        "eslint": "^8.38.0",
+        "eslint-config-next": "^13.3.0",
+        "highlight.js": "^11.10.0",
+        "next": "^13.3.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "ton": "^13.4.1",
+        "typescript": "^4.9.5"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.14",
+        "postcss": "^8.4.23",
+        "tailwindcss": "^3.3.1"
+    }
+}
