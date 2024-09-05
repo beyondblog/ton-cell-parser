@@ -10,7 +10,7 @@ import { parseJettonInternalTransfer } from '../parsers/jettonInternalTransfer';
 import { parseJettonNotify } from '../parsers/jettonNotify';
 import { parseExcess } from '../parsers/excess';
 import { parseJettonContent } from '../parsers/jettonContent';
-import { CustomParsingControl } from './CustomParsingControl';
+import { CustomParsingControl, ParsingStep } from './CustomParsingControl';
 
 interface CellParserProps { }
 
@@ -29,13 +29,14 @@ export function CellParser({ }: CellParserProps) {
     const [isCustomParsing, setIsCustomParsing] = useState(false);
     const [customParsingResult, setCustomParsingResult] = useState<any>(null);
     const [slice, setSlice] = useState<Slice | null>(null);
+    const [parsingSteps, setParsingSteps] = useState<ParsingStep[]>([]);
 
     const handleParse = () => {
         try {
             const cellBytes = Buffer.from(cellBase64, 'hex');
             const cell = Cell.fromBoc(cellBytes)[0];
             const slice = cell.beginParse();
-            setSlice(slice);
+            setSlice(slice.clone());
             const contentSlice = slice.clone();
 
             let opCode = null;
@@ -75,7 +76,7 @@ export function CellParser({ }: CellParserProps) {
         if (!slice) return;
 
         try {
-            let result;
+            let result: any;
             switch (action) {
                 case 'loadUint':
                     result = slice.loadUint(value!);
@@ -83,10 +84,10 @@ export function CellParser({ }: CellParserProps) {
                 case 'loadInt':
                     result = slice.loadInt(value!);
                     break;
-                case 'loadBigUint':
+                case 'loadUintBig':
                     result = slice.loadUintBig(value!);
                     break;
-                case 'loadBigInt':
+                case 'loadIntBig':
                     result = slice.loadIntBig(value!);
                     break;
                 case 'loadCoins':
@@ -95,16 +96,48 @@ export function CellParser({ }: CellParserProps) {
                 case 'loadAddress':
                     result = slice.loadAddress()?.toString() || '';
                     break;
-                case 'loadBytes':
+                case 'loadBuffer':
                     result = slice.loadBuffer(value!);
                     break;
-                case 'loadString':
+                case 'loadStringTail':
                     result = slice.loadStringTail();
+                    if (result.length === 0) {
+                        result = 'Empty string';
+                    }
+                    break;
+                case 'loadStringRefTail':
+                    result = slice.loadStringRefTail();
+                    break;
+                case 'loadMaybeStringTail':
+                    result = slice.loadMaybeStringTail();
+                    break;
+                case 'loadMaybeAddress':
+                    result = slice.loadMaybeAddress()?.toString() || '';
+                    break;
+                case 'loadVarInt':
+                    result = slice.loadVarInt(value!);
+                    break;
+                case 'loadVarIntBig':
+                    result = slice.loadVarIntBig(value!);
+                    break;
+                case 'loadBoolean':
+                    result = slice.loadBoolean();
+                    break;
+                case 'loadMaybeBoolean':
+                    result = slice.loadMaybeBoolean();
+                    break;
+                case 'loadMaybeCoins':
+                    result = slice.loadMaybeCoins();
+                    break;
+                case 'skip':
+                    slice.skip(value!);
+                    result = `Skipped ${value} bits`;
                     break;
                 default:
                     result = 'Unsupported action';
             }
             setCustomParsingResult(result);
+            setParsingSteps(prevSteps => [...prevSteps, { action, value, result }]);
         } catch (err) {
             console.error(err);
             setError('Failed to perform custom parsing');
@@ -146,6 +179,22 @@ export function CellParser({ }: CellParserProps) {
                 <div className="mt-6">
                     <h2 className="text-xl font-bold mb-2">Custom Parsing</h2>
                     <CustomParsingControl onParse={handleCustomParsing} />
+                    <div className="mt-4">
+                        <h3 className="text-lg font-bold mb-2">Parsing Steps</h3>
+                        {parsingSteps.map((step, index) => (
+                            <div key={index} className="mb-2">
+                                <p>
+                                    {step.action}
+                                    {['loadUint', 'loadInt', 'loadBigUint', 'loadBigInt', 'loadBytes'].includes(step.action) && step.value !== undefined
+                                        ? `(${step.value})`
+                                        : ''
+                                    }
+                                    {' = '}
+                                    {JSON.stringify(step.result)}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
                     {customParsingResult && (
                         <pre className="mt-4 p-4 bg-gray-900 rounded-md shadow-inner text-white text-lg overflow-auto">
                             <code className="language-json">{JSON.stringify(customParsingResult, null, 2)}</code>
